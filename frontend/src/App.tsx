@@ -1,136 +1,142 @@
-import { useMemo, useState } from 'react'
-import { Alert, Button, Card, Col, Container, Row, Stack } from 'react-bootstrap'
-import StepProgress from './components/StepProgress'
-import MultiSelectPage from './components/MultiSelectPage'
-import { pagesConfig } from './config/pagesConfig'
+import { useState, useEffect } from "react";
+import { Button, Col, Container, Row } from "react-bootstrap";
+import StepProgress from "./components/StepProgress";
+import MultiSelectPage from "./components/MultiSelectPage";
 
-type SelectionState = Record<string, string[]>
+type PageType =
+  | "bowler"
+  | "delivery"
+  | "take"
+  | "collection"
+  | "error"
+  | "throwIn";
 
-const buildInitialSelections = (): SelectionState =>
-  pagesConfig.reduce((acc, page) => {
-    acc[page.id] = []
-    return acc
-  }, {} as SelectionState)
+type SelectionState = {
+  bowler: string;
+  delivery: string;
+  take: string;
+  collection: string;
+  error: string;
+  throwIn: string;
+};
 
 const App = () => {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [selections, setSelections] = useState<SelectionState>(buildInitialSelections)
-  const [submitted, setSubmitted] = useState(false)
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [selections, setSelections] = useState<SelectionState>({
+    bowler: "",
+    delivery: "",
+    take: "",
+    collection: "",
+    error: "",
+    throwIn: "",
+  });
+  const [lastUpdatedPage, setLastUpdatedPage] = useState<PageType | null>(null);
 
-  const activePage = pagesConfig[currentStep]
-  const isLastStep = currentStep === pagesConfig.length - 1
-  const selectedValues = selections[activePage.id] ?? []
+  // Determine which pages to show based on take result
+  const getVisiblePages = (): PageType[] => {
+    const takeSelection = selections.take;
+    const pages: PageType[] = ["bowler", "delivery", "take"];
 
-  const isCurrentStepValid = activePage.required ? selectedValues.length > 0 : true
+    if (takeSelection === "No touch") {
+      // Skip collection/error, go to throw in
+      pages.push("throwIn");
+    } else if (
+      takeSelection === "Clean take" ||
+      takeSelection === "Catch" ||
+      takeSelection === "Stumping"
+    ) {
+      pages.push("collection");
+      pages.push("throwIn");
+    } else if (takeSelection) {
+      pages.push("error");
+      pages.push("throwIn");
+    }
 
-  const summary = useMemo(() => {
-    return pagesConfig.map((page) => {
-      const values = selections[page.id] ?? []
-      const labels = values.map(
-        (value) => page.options.find((option) => option.value === value)?.label ?? value,
-      )
-      return {
-        id: page.id,
-        title: page.shortLabel ?? page.title,
-        values: labels,
-      }
-    })
-  }, [selections])
+    return pages;
+  };
 
-  const updateSelections = (pageId: string, values: string[]) => {
-    setSelections((prev) => ({ ...prev, [pageId]: values }))
-    setSubmitted(false)
-  }
+  const visiblePages = getVisiblePages();
+  const currentPageType = visiblePages[currentStepIndex];
+  const isLastStep = currentStepIndex === visiblePages.length - 1;
+  const selectedValue = currentPageType
+    ? selections[currentPageType] ?? ""
+    : "";
+  const isCurrentStepValid = selectedValue.length > 0;
 
-  const goToPrevious = () => setCurrentStep((step) => Math.max(step - 1, 0))
-  const goToNext = () => setCurrentStep((step) => Math.min(step + 1, pagesConfig.length - 1))
+  // Auto-advance after selection is made
+  useEffect(() => {
+    if (!lastUpdatedPage) return;
+
+    const newVisiblePages = getVisiblePages();
+    const currentIndex = newVisiblePages.indexOf(lastUpdatedPage);
+
+    if (currentIndex !== -1 && currentIndex < newVisiblePages.length - 1) {
+      // Advance to next page
+      setCurrentStepIndex(currentIndex + 1);
+    }
+
+    setLastUpdatedPage(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selections, lastUpdatedPage]);
+
+  // Ensure current step index is valid after pages change
+  useEffect(() => {
+    const newVisiblePages = getVisiblePages();
+    if (currentStepIndex >= newVisiblePages.length) {
+      setCurrentStepIndex(Math.max(0, newVisiblePages.length - 1));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selections.take]);
+
+  const updateSelections = (pageType: PageType, value: string) => {
+    setSelections((prev) => ({ ...prev, [pageType]: value }));
+    setLastUpdatedPage(pageType);
+  };
+
+  const goToStep = (index: number) => {
+    if (index >= 0 && index < visiblePages.length) {
+      setCurrentStepIndex(index);
+    }
+  };
 
   const handleSubmit = () => {
-    setSubmitted(true)
+    console.log("Submitting selections:", selections);
+  };
+
+  if (!currentPageType) {
+    return null;
   }
 
   return (
-    <Container fluid className="py-5 app-shell">
+    <Container fluid className="py-3 app-shell">
       <Row className="justify-content-center">
-        <Col xs={12} xl={8}>
-          <StepProgress steps={pagesConfig} activeIndex={currentStep} />
-          <MultiSelectPage
-            config={activePage}
-            selectedValues={selectedValues}
-            onChange={(values) => updateSelections(activePage.id, values)}
+        <Col xs={12} xl={10}>
+          <StepProgress
+            visiblePages={visiblePages}
+            selections={selections}
+            activeIndex={currentStepIndex}
+            onStepClick={goToStep}
           />
-          <Stack direction="horizontal" gap={3} className="flex-wrap justify-content-between mt-4">
-            <Button
-              variant="outline-secondary"
-              onClick={goToPrevious}
-              disabled={currentStep === 0}
-              className="flex-grow-1 flex-sm-grow-0"
-            >
-              Back
-            </Button>
-            <div className="ms-sm-auto d-flex gap-3 flex-grow-1 flex-sm-grow-0">
-              {!isLastStep && (
-                <Button
-                  variant="primary"
-                  onClick={goToNext}
-                  disabled={!isCurrentStepValid}
-                  className="flex-grow-1 flex-sm-grow-0"
-                >
-                  Next
-                </Button>
-              )}
-              {isLastStep && (
-                <Button
-                  variant="success"
-                  onClick={handleSubmit}
-                  disabled={!isCurrentStepValid}
-                  className="flex-grow-1 flex-sm-grow-0"
-                >
-                  Submit
-                </Button>
-              )}
+          <MultiSelectPage
+            pageType={currentPageType}
+            selectedValue={selectedValue}
+            onChange={(value) => updateSelections(currentPageType, value)}
+          />
+          {isLastStep && selectedValue && (
+            <div className="mt-3 text-center">
+              <Button
+                variant="success"
+                onClick={handleSubmit}
+                disabled={!isCurrentStepValid}
+              >
+                Submit
+              </Button>
             </div>
-          </Stack>
-        </Col>
-        <Col xs={12} xl={4} className="mt-4 mt-xl-0">
-          <Card className="summary-card shadow-sm">
-            <Card.Body>
-              <Card.Title as="h2" className="h5">
-                Your selections
-              </Card.Title>
-              <Card.Text className="text-body-secondary">
-                This updates in real time so you can sanity-check before submitting.
-              </Card.Text>
-              <Stack gap={3}>
-                {summary.map(({ id, title, values }) => (
-                  <div key={id}>
-                    <p className="fw-semibold mb-2">{title}</p>
-                    {values.length === 0 ? (
-                      <p className="text-body-tertiary mb-0">Nothing picked yet.</p>
-                    ) : (
-                      <div className="d-flex flex-wrap gap-2">
-                        {values.map((value) => (
-                          <span key={value} className="badge rounded-pill bg-primary-subtle text-primary-emphasis">
-                            {value}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </Stack>
-              {submitted && (
-                <Alert variant="success" className="mt-4 mb-0">
-                  Looks good — we captured your picks. You can tweak them anytime.
-                </Alert>
-              )}
-            </Card.Body>
-          </Card>
+          )}
         </Col>
       </Row>
     </Container>
-  )
-}
+  );
+};
 
-export default App
-
+export default App;

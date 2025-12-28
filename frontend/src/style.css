@@ -1,5 +1,6 @@
 :root {
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+    sans-serif;
   color: #0f172a;
   background-color: #f1f5f9;
   font-synthesis: none;
@@ -30,36 +31,41 @@ body {
   border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
-.step-chip {
-  padding: 0.4rem 0.9rem;
-  border-radius: 999px;
+.step-item {
+  border: 1px solid rgba(71, 85, 105, 0.2);
   background: #f8fafc;
   color: #475569;
-  font-weight: 600;
   transition: all 0.2s ease;
-  border: 1px solid rgba(71, 85, 105, 0.2);
+  font-size: 0.875rem;
 }
 
-.step-chip.complete {
+.step-item.complete {
   background: #dbeafe;
   color: #1d4ed8;
   border-color: rgba(59, 130, 246, 0.4);
 }
 
-.step-chip.current {
+.step-item.current {
   background: #1d4ed8;
   color: #ffffff;
+  border-color: #1d4ed8;
+}
+
+.step-item.clickable:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
 }
 
 .step-index {
   display: inline-flex;
-  width: 2rem;
-  height: 2rem;
+  width: 1.5rem;
+  height: 1.5rem;
   border-radius: 999px;
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.15);
   font-weight: 700;
+  font-size: 0.75rem;
 }
 
 .eyebrow {
@@ -71,16 +77,27 @@ body {
 }
 
 .option-button {
-  min-height: 96px;
+  min-height: 60px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.35rem;
+  gap: 0.2rem;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  padding: 0.5rem 1rem;
 }
 
 .option-button:hover,
 .option-button:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 0.75rem 1.5rem rgba(15, 23, 42, 0.08);
+}
+
+.delivery-button {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.delivery-button:hover,
+.delivery-button:focus-visible {
   transform: translateY(-2px);
   box-shadow: 0 0.75rem 1.5rem rgba(15, 23, 42, 0.08);
 }
@@ -91,9 +108,12 @@ body {
   border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
+.progress {
+  height: 0.5rem;
+}
+
 @media (max-width: 991px) {
   .summary-card {
     position: static;
   }
 }
-

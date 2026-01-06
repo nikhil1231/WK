@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 import { google } from "googleapis";
-import { GOOGLE_SHEETS_SCOPE } from "../common/consts.ts";
+import { GOOGLE_API_SCOPE } from "../common/consts.ts";
 import type {
   BallEntry,
   BowlerType,
@@ -20,7 +20,7 @@ dotenv.config();
 
 const auth = new google.auth.GoogleAuth({
   keyFile: "./service-account-key.json", // Downloaded from Google Cloud
-  scopes: [GOOGLE_SHEETS_SCOPE],
+  scopes: [GOOGLE_API_SCOPE],
 });
 
 const NUM_OVERS = 20;

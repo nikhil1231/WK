@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Col, Container, Row } from "react-bootstrap";
+import { Button, Col, Container, Row, Spinner } from "react-bootstrap";
 import type { BallEntry, SelectionState } from "../../common/types";
 import { initGoogleClient, logBallToSheet, signIn } from "./api/sheets";
 import MainPage from "./components/MainPage";
@@ -17,7 +17,7 @@ const EMPTY_SELECTIONS = {
 const App = () => {
   const [selections, setSelections] =
     useState<SelectionState>(EMPTY_SELECTIONS);
-  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     initGoogleClient(setIsSignedIn);
@@ -38,10 +38,21 @@ const App = () => {
   };
 
   return (
-    <Container fluid className="py-3 app-shell">
-      <Row className="justify-content-center">
-        {!isSignedIn ? (
-          <Button onClick={signIn}>Login with Google</Button>
+    <Container fluid className="vh-100 px-3 d-flex flex-column app-shell">
+      <Row className="flex-grow-1 justify-content-center align-items-center">
+        {isSignedIn === null ? (
+          <Spinner
+            className="loading-spinner"
+            animation="border"
+            variant="primary"
+          />
+        ) : isSignedIn === false ? (
+          <div className="d-flex flex-column align-items-center text-center">
+            <h1 className="mb-4">Wicket Keeping Tracker</h1>
+            <Button onClick={signIn}>
+              Login with Google
+            </Button>
+          </div>
         ) : (
           <Col xs={12} xl={10}>
             <MainPage

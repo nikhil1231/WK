@@ -1,4 +1,4 @@
-export const GOOGLE_SHEETS_SCOPE =
-  "https://www.googleapis.com/auth/spreadsheets";
-export const GOOGLE_SHEETS_DISCOVERY =
+export const GOOGLE_API_SCOPE =
+  "https://www.googleapis.com/auth/spreadsheets email profile";
+export const GOOGLE_API_DISCOVERY =
   "https://sheets.googleapis.com/$discovery/rest?version=v4";

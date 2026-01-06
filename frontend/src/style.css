@@ -27,6 +27,11 @@ body {
   max-width: 1200px;
 }
 
+.loading-spinner {
+  width: 5rem;
+  height: 5rem;
+}
+
 .step-progress {
   border: 1px solid rgba(15, 23, 42, 0.08);
 }

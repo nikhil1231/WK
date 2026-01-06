@@ -21,3 +21,15 @@ export const selectionStateToBallEntry = (
     (selections.error as ErrorReason),
   throwInResult: selections.throwIn as ThrowInResult,
 });
+
+export const getEmailLocalStorage = () =>
+  localStorage.getItem("google_user_email");
+
+export const setEmailLocalStorage = (email: string) =>
+  localStorage.setItem("google_user_email", email);
+
+export const setGoogleAccessToken = (token: string) =>
+  localStorage.setItem("google_access_token", token);
+
+export const setGoogleTokenExpiry = (expiry: string) =>
+  localStorage.setItem("google_token_expiry", expiry);

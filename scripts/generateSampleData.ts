@@ -1,6 +1,6 @@
-import { google } from "googleapis";
-import { formatBallRow, getRandomElement } from "../common/utils.ts";
 import * as dotenv from "dotenv";
+import { google } from "googleapis";
+import { GOOGLE_SHEETS_SCOPE } from "../common/consts.ts";
 import type {
   BallEntry,
   BowlerType,
@@ -10,20 +10,18 @@ import type {
 import {
   bowlerTypes,
   collectionDifficulties,
-  deliveryLocations,
+  deliveryPositions,
   errorReasons,
   takeResults,
   throwInResults,
 } from "../common/types.ts";
+import * as utils from "../common/utils.ts";
 dotenv.config();
 
 const auth = new google.auth.GoogleAuth({
   keyFile: "./service-account-key.json", // Downloaded from Google Cloud
-  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  scopes: [GOOGLE_SHEETS_SCOPE],
 });
-
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
-const SHEET_ID = "SAMPLE";
 
 const NUM_OVERS = 20;
 const OVER_LENGTH = 6;
@@ -32,17 +30,11 @@ const POST_OVER_DELAY = 5;
 
 async function populate() {
   const client = await auth.getClient();
-  const sheets = google.sheets({ version: "v4", auth: client as any });
+  const sheetsApi = google.sheets({ version: "v4", auth: client as any });
 
   const dummyData = generateDummyRows();
-  const values = dummyData.map(formatBallRow);
 
-  await sheets.spreadsheets.values.append({
-    spreadsheetId: SPREADSHEET_ID,
-    range: `${SHEET_ID}!A2`,
-    valueInputOption: "USER_ENTERED",
-    requestBody: { values },
-  });
+  await utils.logMultipleBallsToSheet(dummyData, sheetsApi, true);
 
   console.log(`Successfully populated sheet with ${NUM_OVERS} overs.`);
 }
@@ -52,26 +44,26 @@ const generateDummyRows = (): BallEntry[] => {
   let timestamp = new Date();
   for (let i = 0; i < NUM_OVERS; i++) {
     // Pick a random bowler type
-    const bowlerType: BowlerType = getRandomElement(bowlerTypes);
+    const bowlerType: BowlerType = utils.getRandomElement(bowlerTypes);
 
     Array.from({ length: OVER_LENGTH }, () => {
-      const takeResult: TakeResult = getRandomElement(takeResults);
-      let outcomeDetails: OutcomeDetails = getRandomElement(errorReasons);
+      const takeResult: TakeResult = utils.getRandomElement(takeResults);
+      let outcomeDetails: OutcomeDetails = utils.getRandomElement(errorReasons);
 
       if (takeResult === "No touch") {
         outcomeDetails = undefined;
       } else if (["Clean take", "Catch", "Stumping"].includes(takeResult)) {
-        outcomeDetails = getRandomElement(collectionDifficulties);
+        outcomeDetails = utils.getRandomElement(collectionDifficulties);
       }
       timestamp = addMinutes(timestamp, POST_BALL_DELAY);
 
       const entry: BallEntry = {
         timestamp,
         bowlerType,
-        deliveryLocation: getRandomElement(deliveryLocations),
-        takeResult: getRandomElement(takeResults),
+        deliveryPosition: utils.getRandomElement(deliveryPositions),
+        takeResult: utils.getRandomElement(takeResults),
         outcomeDetails,
-        throwInResult: getRandomElement(throwInResults),
+        throwInResult: utils.getRandomElement(throwInResults),
       };
 
       rows.push(entry);

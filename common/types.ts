@@ -10,8 +10,8 @@ export const bowlerTypes = [
 ] as const;
 export type BowlerType = (typeof bowlerTypes)[number];
 
-// 2. Delivery Locations (The 3x3 Grid)
-export const deliveryLocations = [
+// 2. Delivery Positions (The 3x3 Grid)
+export const deliveryPositions = [
   "High Off Side",
   "High Straight",
   "High Leg Side",
@@ -22,7 +22,7 @@ export const deliveryLocations = [
   "Low Straight",
   "Low Leg Side",
 ] as const;
-export type DeliveryLocation = (typeof deliveryLocations)[number];
+export type DeliveryPosition = (typeof deliveryPositions)[number];
 
 // 3. Take Results
 export const takeResults = [
@@ -66,8 +66,25 @@ export type ThrowInResult = (typeof throwInResults)[number];
 export type BallEntry = {
   timestamp: Date;
   bowlerType: BowlerType;
-  deliveryLocation: DeliveryLocation;
+  deliveryPosition: DeliveryPosition;
   takeResult: TakeResult;
   outcomeDetails: OutcomeDetails;
   throwInResult: ThrowInResult | undefined;
+};
+
+export type PageType =
+  | "bowler"
+  | "delivery"
+  | "take"
+  | "collection"
+  | "error"
+  | "throwIn";
+
+export type SelectionState = {
+  bowler: string;
+  delivery: string;
+  take: string;
+  collection: string;
+  error: string;
+  throwIn: string;
 };

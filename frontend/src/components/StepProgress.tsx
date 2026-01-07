@@ -1,21 +1,5 @@
 import { ProgressBar } from "react-bootstrap";
-
-type PageType =
-  | "bowler"
-  | "delivery"
-  | "take"
-  | "collection"
-  | "error"
-  | "throwIn";
-
-type SelectionState = {
-  bowler: string;
-  delivery: string;
-  take: string;
-  collection: string;
-  error: string;
-  throwIn: string;
-};
+import type { PageType, SelectionState } from "../../../common/types";
 
 const PAGE_LABELS: Record<PageType, string> = {
   bowler: "Bowler",
@@ -56,7 +40,10 @@ const StepProgress = ({
               className={`step-item d-flex align-items-center gap-2 p-2 rounded ${
                 isActive ? "current" : isComplete ? "complete" : ""
               } ${isClickable ? "clickable" : ""}`}
-              onClick={() => isClickable && onStepClick(idx)}
+              onClick={() =>
+                selections[visiblePages[Math.max(idx - 1, 0)]] &&
+                onStepClick(idx)
+              }
               style={{ cursor: isClickable ? "pointer" : "default" }}
             >
               <div className="d-flex align-items-center gap-2">

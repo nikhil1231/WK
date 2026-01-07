@@ -39,30 +39,30 @@ const App = () => {
 
   return (
     <Container fluid className="vh-100 px-3 d-flex flex-column app-shell">
-      <Row className="flex-grow-1 justify-content-center align-items-center">
-        {isSignedIn === null ? (
+      {isSignedIn === null ? (
+        <Row className="flex-grow-1 justify-content-center align-items-center">
           <Spinner
             className="loading-spinner"
             animation="border"
             variant="primary"
           />
-        ) : isSignedIn === false ? (
+        </Row>
+      ) : isSignedIn === false ? (
+        <Row className="flex-grow-1 justify-content-center align-items-center">
           <div className="d-flex flex-column align-items-center text-center">
             <h1 className="mb-4">Wicket Keeping Tracker</h1>
-            <Button onClick={signIn}>
-              Login with Google
-            </Button>
+            <Button onClick={signIn}>Login with Google</Button>
           </div>
-        ) : (
-          <Col xs={12} xl={10}>
-            <MainPage
-              selections={selections}
-              setSelections={setSelections}
-              handleSubmit={handleSubmit}
-            />
-          </Col>
-        )}
-      </Row>
+        </Row>
+      ) : (
+        <Col xs={12} xl={10}>
+          <MainPage
+            selections={selections}
+            setSelections={setSelections}
+            handleSubmit={handleSubmit}
+          />
+        </Col>
+      )}
     </Container>
   );
 };

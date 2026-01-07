@@ -55,10 +55,9 @@ const MultiSelectPage = ({ pageType, selectedValue, onChange }: Props) => {
   return (
     <section className="multiselect-page rounded-3 shadow-sm bg-body p-3">
       <header className="mb-3">
-        <p className="eyebrow text-uppercase fw-semibold text-primary mb-1 small">
+        <p className="eyebrow text-uppercase fw-semibold  mb-1 small">
           {config.title}
         </p>
-        <h1 className="h5 fw-bold mb-1">{config.title}</h1>
       </header>
 
       {pageType === "delivery" ? (

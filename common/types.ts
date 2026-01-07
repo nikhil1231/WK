@@ -81,10 +81,5 @@ export type PageType =
   | "throwIn";
 
 export type SelectionState = {
-  bowler: string;
-  delivery: string;
-  take: string;
-  collection: string;
-  error: string;
-  throwIn: string;
+  [K in PageType]: string;
 };

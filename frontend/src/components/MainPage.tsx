@@ -35,20 +35,16 @@ const MainPage = ({ selections, setSelections, handleSubmit }: Props) => {
     const takeSelection = selections.take;
     const pages: PageType[] = ["bowler", "delivery", "take"];
 
-    if (takeSelection === "No touch") {
-      // Skip collection/error, go to throw in
-      pages.push("throwIn");
-    } else if (
+    if (
       takeSelection === "Clean take" ||
       takeSelection === "Catch" ||
       takeSelection === "Stumping"
     ) {
       pages.push("collection");
-      pages.push("throwIn");
-    } else if (takeSelection) {
+    } else if (takeSelection && takeSelection != "No touch") {
       pages.push("error");
-      pages.push("throwIn");
     }
+    pages.push("throwIn");
 
     return pages;
   };
@@ -87,10 +83,18 @@ const MainPage = ({ selections, setSelections, handleSubmit }: Props) => {
     }
   }, [selections.bowler, selections.take]);
 
-  const updateSelections = (pageType: PageType, value: string) => {
-    setSelections((prev) => ({ ...prev, [pageType]: value }));
+  const handleUpdateSelection = (pageType: PageType, value: string) => {
+    updateSingleSelection(pageType, value);
     setLastUpdatedPage(pageType);
+
+    if (pageType === "take") {
+      updateSingleSelection("collection", "");
+      updateSingleSelection("error", "");
+    }
   };
+
+  const updateSingleSelection = (pageType: PageType, value: string) =>
+    setSelections((prev) => ({ ...prev, [pageType]: value }));
 
   const goToStep = (index: number) => {
     if (index >= 0 && index < visiblePages.length) {
@@ -115,7 +119,7 @@ const MainPage = ({ selections, setSelections, handleSubmit }: Props) => {
           <MultiSelectPage
             pageType={currentPageType}
             selectedValue={selectedValue}
-            onChange={(value) => updateSelections(currentPageType, value)}
+            onChange={(value) => handleUpdateSelection(currentPageType, value)}
           />
           {isLastStep && selectedValue && (
             <div className="mt-3 text-center">

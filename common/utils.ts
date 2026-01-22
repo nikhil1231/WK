@@ -48,7 +48,7 @@ export const getEnvVar = (key: string): string => {
     typeof process !== "undefined" && process.env
       ? process.env[key]
       : import.meta.env[`VITE_${key}`];
-  if (typeof value === "undefined" || value === null) {
+  if (typeof value === "undefined" || value === null || value === '') {
     throw new Error(`Environment variable ${key} is not set.`);
   }
   return value;

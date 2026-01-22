@@ -12,6 +12,7 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: github-pages
     # This tells EVERY step in this job to run inside the /frontend folder
     defaults:
       run:

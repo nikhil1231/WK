@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Button, Col, Container, Row, Spinner } from "react-bootstrap";
+import { Button, Col, Container, Navbar, Row, Spinner } from "react-bootstrap";
 import type { BallEntry, SelectionState } from "../../common/types";
-import { initGoogleClient, logBallToSheet, signIn } from "./api/sheets";
+import { initGoogleClient, logBallToSheet, signIn, signOut } from "./api/sheets";
 import MainPage from "./components/MainPage";
 import { selectionStateToBallEntry } from "./utils";
 
@@ -37,10 +37,15 @@ const App = () => {
     }
   };
 
+  const handleLogout = () => {
+    signOut();
+    setIsSignedIn(false);
+  };
+
   return (
-    <Container fluid className="vh-100 px-3 d-flex flex-column app-shell">
+    <Container fluid className="vh-100 px-0 d-flex flex-column app-shell">
       {isSignedIn === null ? (
-        <Row className="flex-grow-1 justify-content-center align-items-center">
+        <Row className="flex-grow-1 justify-content-center align-items-center m-0">
           <Spinner
             className="loading-spinner"
             animation="border"
@@ -48,20 +53,35 @@ const App = () => {
           />
         </Row>
       ) : isSignedIn === false ? (
-        <Row className="flex-grow-1 justify-content-center align-items-center">
+        <Row className="flex-grow-1 justify-content-center align-items-center m-0">
           <div className="d-flex flex-column align-items-center text-center">
             <h1 className="mb-4">Wicket Keeping Tracker</h1>
             <Button onClick={signIn}>Login with Google</Button>
           </div>
         </Row>
       ) : (
-        <Col xs={12} xl={10}>
-          <MainPage
-            selections={selections}
-            setSelections={setSelections}
-            handleSubmit={handleSubmit}
-          />
-        </Col>
+        <>
+          <Navbar bg="light" variant="light" className="mb-3 border-bottom shadow-sm px-3">
+             <Navbar.Brand className="fw-bold text-primary">Wicket Keeping Tracker</Navbar.Brand>
+             <Navbar.Toggle />
+             <Navbar.Collapse className="justify-content-end">
+                <Button variant="outline-danger" size="sm" onClick={handleLogout}>
+                  Logout
+                </Button>
+             </Navbar.Collapse>
+          </Navbar>
+          <Container fluid className="px-3">
+             <Row className="justify-content-center">
+                <Col xs={12} xl={10}>
+                    <MainPage
+                    selections={selections}
+                    setSelections={setSelections}
+                    handleSubmit={handleSubmit}
+                    />
+                </Col>
+            </Row>
+          </Container>
+        </>
       )}
     </Container>
   );

@@ -73,7 +73,10 @@ export const initGoogleClient = (
 export const signIn = () => {
   tokenClient.requestAccessToken({ prompt: "" });
 };
-export const signOut = () => gapi.auth2.getAuthInstance().signOut();
+export const signOut = () => {
+  localStorage.removeItem("google_access_token");
+  localStorage.removeItem("google_token_expiry");
+};
 
 export const logBallToSheet = async (entry: BallEntry) =>
   await utils.logBallToSheet(entry, gapi.client.sheets);

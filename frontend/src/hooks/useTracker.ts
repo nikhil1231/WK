@@ -51,6 +51,13 @@ export const useTracker = () => {
           // Ensure we have a valid position
           if (lastEntry.overCount) {
             setLastOverCount(lastEntry.overCount);
+
+            // Pre-select bowler if we are continuing an over
+            const nextCnt = getNextOverCount(lastEntry.overCount);
+            if (nextCnt.ball > 1 && lastEntry.bowlerType) {
+              setSelections((prev) => ({ ...prev, bowler: lastEntry.bowlerType }));
+              setCurrentStepIndex(1); // Skip bowler selection
+            }
           }
         }
       }).catch(console.error);
@@ -121,9 +128,21 @@ export const useTracker = () => {
     try {
       const sheetName = utils.getEnvVar("SPREADSHEET_NAME");
       await logBallToSheet(newEntry, sheetName);
-      setSelections({...EMPTY_SELECTIONS}); // Reset selections
+
+      // Determine next state
+      const futureOverCount = getNextOverCount(nextOverCount);
+      const isSameOver = futureOverCount.ball > 1;
+
+      if (isSameOver) {
+        // Keep bowler, reset others
+        setSelections({ ...EMPTY_SELECTIONS, bowler: selections.bowler });
+        setCurrentStepIndex(1); // Skip bowler selection
+      } else {
+        setSelections({ ...EMPTY_SELECTIONS }); // Reset all
+        setCurrentStepIndex(0); // Start from beginning
+      }
+
       setLastOverCount(nextOverCount); // Update local state
-      setCurrentStepIndex(0); // Reset to first step
       setShowToast(true);
     } catch (err) {
       console.error(err);

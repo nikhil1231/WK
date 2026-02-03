@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { initGoogleClient, logBallToSheet, signIn, signOut } from "../api/sheets";
 import type { BallEntry, PageType, SelectionState } from "../../../common/types";
+import * as utils from "../../../common/utils.ts";
 import { selectionStateToBallEntry } from "../utils";
 
 const EMPTY_SELECTIONS: SelectionState = {
@@ -87,7 +88,8 @@ export const useTracker = () => {
     console.log("Logging ball entry", newEntry);
 
     try {
-      await logBallToSheet(newEntry);
+      const sheetName = utils.getEnvVar("SPREADSHEET_NAME");
+      await logBallToSheet(newEntry, sheetName);
       setSelections({...EMPTY_SELECTIONS}); // Reset selections
       setCurrentStepIndex(0); // Reset to first step
       setShowToast(true);

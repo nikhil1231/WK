@@ -34,7 +34,8 @@ async function populate() {
 
   const dummyData = generateDummyRows();
 
-  await utils.logMultipleBallsToSheet(dummyData, sheetsApi, true);
+  const sheetName = utils.getEnvVar("SPREADSHEET_NAME");
+  await utils.logMultipleBallsToSheet(dummyData, sheetsApi, sheetName, true);
 
   console.log(`Successfully populated sheet with ${NUM_OVERS} overs.`);
 }

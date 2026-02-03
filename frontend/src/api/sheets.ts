@@ -78,8 +78,11 @@ export const signOut = () => {
   localStorage.removeItem("google_token_expiry");
 };
 
-export const logBallToSheet = async (entry: BallEntry) =>
-  await utils.logBallToSheet(entry, gapi.client.sheets);
+export const logBallToSheet = async (entry: BallEntry, sheetName: string) =>
+  await utils.logBallToSheet(entry, gapi.client.sheets, sheetName);
+
+export const readSheet = async (sheetName: string): Promise<BallEntry[]> =>
+  await utils.readSheet(gapi.client.sheets, sheetName);
 
 /**
  * Fetches basic profile info (email, name) using the access token

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Button, Col, Container, Navbar, Row, Spinner } from "react-bootstrap";
-import type { BallEntry, SelectionState } from "../../common/types";
+import type { BallEntry, PageType, SelectionState } from "../../common/types";
 import { initGoogleClient, logBallToSheet, signIn, signOut } from "./api/sheets";
 import MainPage from "./components/MainPage";
+import StepProgress from "./components/StepProgress";
 import { selectionStateToBallEntry } from "./utils";
 
-const EMPTY_SELECTIONS = {
+const EMPTY_SELECTIONS: SelectionState = {
   bowler: "",
   delivery: "",
   take: "",
@@ -19,9 +20,66 @@ const App = () => {
     useState<SelectionState>(EMPTY_SELECTIONS);
   const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
 
+  // Navigation State (Lifted from MainPage)
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [lastUpdatedPage, setLastUpdatedPage] = useState<PageType | null>(null);
+
   useEffect(() => {
     initGoogleClient(setIsSignedIn);
   }, []);
+
+  // Determine which pages to show based on take result
+  const getVisiblePages = (): PageType[] => {
+    const takeSelection = selections.take;
+    const pages: PageType[] = ["bowler", "delivery", "take"];
+
+    if (
+      takeSelection === "Clean take" ||
+      takeSelection === "Catch" ||
+      takeSelection === "Stumping"
+    ) {
+      pages.push("collection");
+    } else if (takeSelection && takeSelection != "No touch") {
+      pages.push("error");
+    }
+    pages.push("throwIn");
+
+    return pages;
+  };
+
+  const visiblePages = getVisiblePages();
+
+  // Auto-advance after selection is made
+  useEffect(() => {
+    if (!lastUpdatedPage) return;
+
+    const newVisiblePages = getVisiblePages();
+    const currentIndex = newVisiblePages.indexOf(lastUpdatedPage);
+
+    if (currentIndex !== -1 && currentIndex < newVisiblePages.length - 1) {
+      // Advance to next page
+      setCurrentStepIndex(currentIndex + 1);
+    }
+
+    setLastUpdatedPage(null);
+  }, [selections, lastUpdatedPage]);
+
+  // Ensure current step index is valid after pages change
+  useEffect(() => {
+    const newVisiblePages = getVisiblePages();
+    if (selections.bowler === "") {
+      setCurrentStepIndex(0);
+      setLastUpdatedPage(null);
+    } else if (currentStepIndex >= newVisiblePages.length) {
+      setCurrentStepIndex(Math.max(0, newVisiblePages.length - 1));
+    }
+  }, [selections.bowler, selections.take]);
+
+  const goToStep = (index: number) => {
+    if (index >= 0 && index < visiblePages.length) {
+      setCurrentStepIndex(index);
+    }
+  };
 
   const handleSubmit = async () => {
     const newEntry: BallEntry = selectionStateToBallEntry(selections);
@@ -30,7 +88,8 @@ const App = () => {
 
     try {
       await logBallToSheet(newEntry);
-      setSelections(EMPTY_SELECTIONS);
+      setSelections({...EMPTY_SELECTIONS}); // Reset selections
+      setCurrentStepIndex(0); // Reset to first step
     } catch (err) {
       console.error(err);
       alert("Failed to save.");
@@ -61,22 +120,33 @@ const App = () => {
         </Row>
       ) : (
         <>
-          <Navbar bg="light" variant="light" className="mb-3 border-bottom shadow-sm px-3">
-             <Navbar.Brand className="fw-bold text-primary">Wicket Keeping Tracker</Navbar.Brand>
-             <Navbar.Toggle />
-             <Navbar.Collapse className="justify-content-end">
-                <Button variant="outline-danger" size="sm" onClick={handleLogout}>
-                  Logout
-                </Button>
-             </Navbar.Collapse>
-          </Navbar>
-          <Container fluid className="px-3">
-             <Row className="justify-content-center">
-                <Col xs={12} xl={10}>
+          <div className="sticky-top bg-white border-bottom shadow-sm z-3">
+            <Navbar bg="light" variant="light" className="px-3">
+               <Navbar.Brand className="fw-bold text-primary">WK Tracker</Navbar.Brand>
+               <Navbar.Toggle />
+               <Navbar.Collapse className="justify-content-end">
+                  <Button variant="outline-danger" size="sm" onClick={handleLogout}>
+                    Logout
+                  </Button>
+               </Navbar.Collapse>
+            </Navbar>
+            <StepProgress
+                visiblePages={visiblePages}
+                selections={selections}
+                activeIndex={currentStepIndex}
+                onStepClick={goToStep}
+            />
+          </div>
+          <Container fluid className="px-3 flex-grow-1 overflow-y-auto">
+             <Row className="justify-content-center h-100">
+                <Col xs={12} xl={10} className="py-3">
                     <MainPage
                     selections={selections}
                     setSelections={setSelections}
                     handleSubmit={handleSubmit}
+                    activeIndex={currentStepIndex}
+                    visiblePages={visiblePages}
+                    setLastUpdatedPage={setLastUpdatedPage}
                     />
                 </Col>
             </Row>

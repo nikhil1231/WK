@@ -9,7 +9,7 @@ type Props = {
 const MultiSelect = ({ options, selectedValue, onChange }: Props) => {
   // Regular button layout for other pages
   return (
-    <Row xs={1} sm={2} lg={3} className="g-2">
+    <Row xs={2} sm={3} className="g-2">
       {options.map((option) => {
         const isActive = selectedValue === option;
         return (

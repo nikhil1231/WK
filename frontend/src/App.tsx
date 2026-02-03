@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Col, Container, Navbar, Row, Spinner } from "react-bootstrap";
+import { Button, Col, Container, Navbar, Row, Spinner, Toast, ToastContainer } from "react-bootstrap";
 import type { BallEntry, PageType, SelectionState } from "../../common/types";
 import { initGoogleClient, logBallToSheet, signIn, signOut } from "./api/sheets";
 import MainPage from "./components/MainPage";
@@ -20,6 +20,7 @@ const App = () => {
   const [selections, setSelections] =
     useState<SelectionState>(EMPTY_SELECTIONS);
   const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
+  const [showToast, setShowToast] = useState(false);
 
   // Navigation State (Lifted from MainPage)
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -93,6 +94,7 @@ const App = () => {
       await logBallToSheet(newEntry);
       setSelections({...EMPTY_SELECTIONS}); // Reset selections
       setCurrentStepIndex(0); // Reset to first step
+      setShowToast(true);
     } catch (err) {
       console.error(err);
       alert("Failed to save.");
@@ -165,6 +167,16 @@ const App = () => {
                 </Col>
             </Row>
           </Container>
+
+          <ToastContainer position="bottom-end" className="p-3" style={{ zIndex: 1100 }}>
+             <Toast onClose={() => setShowToast(false)} show={showToast} delay={3000} autohide bg="primary">
+                <Toast.Header>
+                   <strong className="me-auto">WK Tracker</strong>
+                   <small>Just now</small>
+                </Toast.Header>
+                <Toast.Body className="text-white">Entry saved successfully!</Toast.Body>
+             </Toast>
+          </ToastContainer>
         </>
       )}
     </Container>

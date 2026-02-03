@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
-import { initGoogleClient, logBallToSheet, signIn, signOut } from "../api/sheets";
-import type { BallEntry, PageType, SelectionState } from "../../../common/types";
+import { initGoogleClient, logBallToSheet, readSheet, signIn, signOut } from "../api/sheets";
+import type { BallEntry, OverCount, PageType, SelectionState } from "../../../common/types";
 import * as utils from "../../../common/utils.ts";
 import { selectionStateToBallEntry } from "../utils";
 
@@ -14,10 +14,25 @@ const EMPTY_SELECTIONS: SelectionState = {
   throwIn: "",
 };
 
+// TODO: handle no-balls
+const getNextOverCount = (current: OverCount): OverCount => {
+  let { over, ball } = current;
+  if (ball >= 6) {
+    over += 1;
+    ball = 1;
+  } else {
+    ball += 1;
+  }
+  return { over, ball };
+};
+
 export const useTracker = () => {
   const [selections, setSelections] = useState<SelectionState>(EMPTY_SELECTIONS);
   const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
   const [showToast, setShowToast] = useState(false);
+
+  // Tracking State
+  const [lastOverCount, setLastOverCount] = useState<OverCount>({ over: 0, ball: 0 });
 
   // Navigation State
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -26,6 +41,21 @@ export const useTracker = () => {
   useEffect(() => {
     initGoogleClient(setIsSignedIn);
   }, []);
+
+  useEffect(() => {
+    if (isSignedIn) {
+      const sheetName = utils.getEnvVar("SPREADSHEET_NAME");
+      readSheet(sheetName).then((entries) => {
+        if (entries.length > 0) {
+          const lastEntry = entries[entries.length - 1];
+          // Ensure we have a valid position
+          if (lastEntry.overCount) {
+            setLastOverCount(lastEntry.overCount);
+          }
+        }
+      }).catch(console.error);
+    }
+  }, [isSignedIn]);
 
   // Determine which pages to show based on take result
   const getVisiblePages = (): PageType[] => {
@@ -83,7 +113,8 @@ export const useTracker = () => {
   };
 
   const handleSubmit = async () => {
-    const newEntry: BallEntry = selectionStateToBallEntry(selections);
+    const nextOverCount = getNextOverCount(lastOverCount);
+    const newEntry: BallEntry = selectionStateToBallEntry(selections, nextOverCount);
 
     console.log("Logging ball entry", newEntry);
 
@@ -91,6 +122,7 @@ export const useTracker = () => {
       const sheetName = utils.getEnvVar("SPREADSHEET_NAME");
       await logBallToSheet(newEntry, sheetName);
       setSelections({...EMPTY_SELECTIONS}); // Reset selections
+      setLastOverCount(nextOverCount); // Update local state
       setCurrentStepIndex(0); // Reset to first step
       setShowToast(true);
     } catch (err) {
@@ -111,7 +143,8 @@ export const useTracker = () => {
       showToast,
       currentStepIndex,
       visiblePages,
-      isSummary
+      isSummary,
+      currentOverCount: getNextOverCount(lastOverCount)
     },
     actions: {
       setSelections,

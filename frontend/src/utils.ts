@@ -1,5 +1,6 @@
 import type {
   BallEntry,
+  OverCount,
   BowlerType,
   CollectionDifficulty,
   DeliveryPosition,
@@ -20,9 +21,11 @@ export const PAGE_LABELS: Record<PageType, string> = {
 };
 
 export const selectionStateToBallEntry = (
-  selections: SelectionState
+  selections: SelectionState,
+  overCount: OverCount
 ): BallEntry => ({
   timestamp: new Date(),
+  overCount,
   bowlerType: selections.bowler as BowlerType,
   deliveryPosition: selections.delivery as DeliveryPosition,
   takeResult: selections.take as TakeResult,

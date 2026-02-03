@@ -42,6 +42,7 @@ const App = () => {
             currentStepIndex={currentStepIndex}
             onLogout={handleLogout}
             onStepClick={goToStep}
+            overCount={state.currentOverCount}
           />
           <Container fluid className="px-3 flex-grow-1 overflow-y-auto">
              <Row className="justify-content-center h-100">

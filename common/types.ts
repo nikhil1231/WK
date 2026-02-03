@@ -63,8 +63,14 @@ export const throwInResults = [
 ] as const;
 export type ThrowInResult = (typeof throwInResults)[number];
 
+export type OverCount = {
+  over: number;
+  ball: number;
+};
+
 export type BallEntry = {
   timestamp: Date;
+  overCount: OverCount;
   bowlerType: BowlerType;
   deliveryPosition: DeliveryPosition;
   takeResult: TakeResult;

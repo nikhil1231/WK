@@ -33,7 +33,7 @@ export const readSheet = async (
   const spreadsheetId = getEnvVar("SPREADSHEET_ID");
   const response = await googleSheetsApi.spreadsheets.values.get({
     spreadsheetId,
-    range: `${sheetName}!A2:F`,
+    range: `${sheetName}!A2:H`,
   });
 
   // Handle differences between nodejs googleapis (data.values) and browser gapi (result.values)
@@ -52,6 +52,8 @@ export const readSheet = async (
 export const formatBallRow = (entry: BallEntry): string[] => {
   return [
     entry.timestamp.toISOString(),
+    entry.overCount.over.toString(),
+    entry.overCount.ball.toString(),
     entry.bowlerType,
     entry.deliveryPosition,
     entry.takeResult,
@@ -63,6 +65,8 @@ export const formatBallRow = (entry: BallEntry): string[] => {
 export const parseBallRow = (row: string[]): BallEntry => {
   const [
     timestampStr,
+    overStr,
+    ballStr,
     bowlerType,
     deliveryPosition,
     takeResult,
@@ -72,6 +76,10 @@ export const parseBallRow = (row: string[]): BallEntry => {
 
   return {
     timestamp: new Date(timestampStr),
+    overCount: {
+      over: Number(overStr) || 0,
+      ball: Number(ballStr) || 0,
+    },
     bowlerType: bowlerType as any,
     deliveryPosition: deliveryPosition as any,
     takeResult: takeResult as any,

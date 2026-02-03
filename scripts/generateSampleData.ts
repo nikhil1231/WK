@@ -47,7 +47,7 @@ const generateDummyRows = (): BallEntry[] => {
     // Pick a random bowler type
     const bowlerType: BowlerType = utils.getRandomElement(bowlerTypes);
 
-    Array.from({ length: OVER_LENGTH }, () => {
+    Array.from({ length: OVER_LENGTH }, (_, ballIndex) => {
       const takeResult: TakeResult = utils.getRandomElement(takeResults);
       let outcomeDetails: OutcomeDetails = utils.getRandomElement(errorReasons);
 
@@ -60,6 +60,7 @@ const generateDummyRows = (): BallEntry[] => {
 
       const entry: BallEntry = {
         timestamp,
+        overCount: { over: i, ball: ballIndex + 1 },
         bowlerType,
         deliveryPosition: utils.getRandomElement(deliveryPositions),
         takeResult: utils.getRandomElement(takeResults),

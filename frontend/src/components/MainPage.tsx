@@ -6,7 +6,7 @@ import type { PageType, SelectionState } from "../../../common/types";
 type Props = {
   selections: SelectionState;
   setSelections: Dispatch<SetStateAction<SelectionState>>;
-  handleSubmit: () => void;
+  onReview: () => void;
   activeIndex: number;
   visiblePages: PageType[];
   setLastUpdatedPage: Dispatch<SetStateAction<PageType | null>>;
@@ -15,12 +15,12 @@ type Props = {
 const MainPage = ({
     selections,
     setSelections,
-    handleSubmit,
+    onReview,
     activeIndex,
     visiblePages,
     setLastUpdatedPage
 }: Props) => {
-
+// ... (lines 24-57 same) -> I will just replace the Props definition and the button usage.
   const currentPageType = visiblePages[activeIndex];
   const isLastStep = activeIndex === visiblePages.length - 1;
   const selectedValue = currentPageType
@@ -57,11 +57,11 @@ const MainPage = ({
           {isLastStep && selectedValue && (
             <div className="mt-3 text-center">
               <Button
-                variant="success"
-                onClick={handleSubmit}
+                variant="primary"
+                onClick={onReview}
                 disabled={!isCurrentStepValid}
               >
-                Submit
+                Next
               </Button>
             </div>
           )}

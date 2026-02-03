@@ -4,10 +4,20 @@ import type {
   CollectionDifficulty,
   DeliveryPosition,
   ErrorReason,
+  PageType,
   SelectionState,
   TakeResult,
   ThrowInResult,
 } from "../../common/types";
+
+export const PAGE_LABELS: Record<PageType, string> = {
+  bowler: "Bowler",
+  delivery: "Delivery",
+  take: "Take",
+  collection: "Difficulty",
+  error: "Error",
+  throwIn: "Throw In",
+};
 
 export const selectionStateToBallEntry = (
   selections: SelectionState

@@ -8,9 +8,10 @@ type Props = {
   visiblePages: PageType[];
   onEdit: (index: number) => void;
   onSubmit: () => void;
+  isSubmitting?: boolean;
 };
 
-const SummaryPage = ({ selections, visiblePages, onEdit, onSubmit }: Props) => {
+const SummaryPage = ({ selections, visiblePages, onEdit, onSubmit, isSubmitting = false }: Props) => {
   return (
     <Container fluid className="py-3 app-shell">
       <Row className="justify-content-center">
@@ -40,8 +41,8 @@ const SummaryPage = ({ selections, visiblePages, onEdit, onSubmit }: Props) => {
             ))}
           </div>
           <div className="text-center">
-            <Button variant="success" size="lg" onClick={onSubmit} className="w-100">
-              Submit Entry
+            <Button variant="success" size="lg" onClick={onSubmit} className="w-100" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit Entry"}
             </Button>
           </div>
         </Col>

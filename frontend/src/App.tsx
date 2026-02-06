@@ -11,7 +11,8 @@ const App = () => {
   const {
     selections,
     isSignedIn,
-    showToast,
+    toast,
+    isSubmitting,
     currentStepIndex,
     visiblePages,
     isSummary
@@ -23,7 +24,7 @@ const App = () => {
     handleSubmit,
     handleLogout,
     signIn,
-    setShowToast
+    hideToast
   } = actions;
 
   return (
@@ -53,6 +54,7 @@ const App = () => {
                             visiblePages={visiblePages}
                             onEdit={goToStep}
                             onSubmit={handleSubmit}
+                            isSubmitting={isSubmitting}
                         />
                     ) : (
                         <MainPage
@@ -69,12 +71,12 @@ const App = () => {
           </Container>
 
           <ToastContainer position="bottom-end" className="p-3" style={{ zIndex: 1100 }}>
-             <Toast onClose={() => setShowToast(false)} show={showToast} delay={3000} autohide bg="primary">
+             <Toast onClose={hideToast} show={toast.show} delay={3000} autohide bg={toast.variant}>
                 <Toast.Header>
                    <strong className="me-auto">WK Tracker</strong>
                    <small>Just now</small>
                 </Toast.Header>
-                <Toast.Body className="text-white">Entry saved successfully!</Toast.Body>
+                <Toast.Body className="text-white">{toast.message}</Toast.Body>
              </Toast>
           </ToastContainer>
         </>

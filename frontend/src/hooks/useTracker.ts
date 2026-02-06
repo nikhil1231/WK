@@ -29,7 +29,12 @@ const getNextOverCount = (current: OverCount): OverCount => {
 export const useTracker = () => {
   const [selections, setSelections] = useState<SelectionState>(EMPTY_SELECTIONS);
   const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
-  const [showToast, setShowToast] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState<{ show: boolean; message: string; variant: "success" | "danger" }>({
+    show: false,
+    message: "",
+    variant: "success",
+  });
 
   // Tracking State
   const [lastOverCount, setLastOverCount] = useState<OverCount>({ over: 0, ball: 0 });
@@ -120,6 +125,9 @@ export const useTracker = () => {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     const nextOverCount = getNextOverCount(lastOverCount);
     const newEntry: BallEntry = selectionStateToBallEntry(selections, nextOverCount);
 
@@ -143,10 +151,12 @@ export const useTracker = () => {
       }
 
       setLastOverCount(nextOverCount); // Update local state
-      setShowToast(true);
+      setToast({ show: true, message: "Entry saved successfully!", variant: "success" });
     } catch (err) {
       console.error(err);
-      alert("Failed to save.");
+      setToast({ show: true, message: "Failed to save entry. Please try again.", variant: "danger" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -159,7 +169,8 @@ export const useTracker = () => {
     state: {
       selections,
       isSignedIn,
-      showToast,
+      toast,
+      isSubmitting,
       currentStepIndex,
       visiblePages,
       isSummary,
@@ -172,7 +183,7 @@ export const useTracker = () => {
       handleSubmit,
       handleLogout,
       signIn,
-      setShowToast
+      hideToast: () => setToast((prev) => ({ ...prev, show: false }))
     }
   };
 };

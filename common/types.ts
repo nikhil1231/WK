@@ -1,3 +1,4 @@
+
 // 1. Bowler Types
 export const bowlerTypes = [
   "LA seam up",
@@ -62,6 +63,17 @@ export const throwInResults = [
   "No touch",
 ] as const;
 export type ThrowInResult = (typeof throwInResults)[number];
+
+export const SHEET_HEADERS = [
+    "Timestamp",
+    "Over",
+    "Ball",
+    "Bowler",
+    "Delivery",
+    "Take",
+    "Outcome",
+    "Throw In"
+] as const;
 
 export type OverCount = {
   over: number;

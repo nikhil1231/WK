@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { initGoogleClient, logBallToSheet, readSheet, signIn, signOut } from "../api/sheets";
 import type { BallEntry, OverCount, PageType, SelectionState } from "../../../common/types";
-import * as utils from "../../../common/utils.ts";
 import { selectionStateToBallEntry } from "../utils";
 
 const EMPTY_SELECTIONS: SelectionState = {
@@ -43,14 +42,41 @@ export const useTracker = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [lastUpdatedPage, setLastUpdatedPage] = useState<PageType | null>(null);
 
+  // Match State
+  const [matchDate, setMatchDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [matchNumber, setMatchNumber] = useState(1);
+  const [isMatchSelected, setIsMatchSelected] = useState(false);
+
+  const matchName = `${matchDate}_${matchNumber}`;
+
+  const formatMatchDisplay = (dateStr: string, matchNum: number) => {
+    try {
+      const date = new Date(dateStr);
+      const day = date.getDate();
+      const month = date.toLocaleString('default', { month: 'short' });
+
+      const getOrdinalSuffix = (day: number) => {
+        const s = ["th", "st", "nd", "rd"];
+        const v = day % 100;
+        return s[(v - 20) % 10] || s[v] || s[0];
+      };
+
+      return `${day}${getOrdinalSuffix(day)} ${month} - Match ${matchNum}`;
+    } catch {
+      return matchName;
+    }
+  };
+
+  const matchDisplayName = formatMatchDisplay(matchDate, matchNumber);
+
   useEffect(() => {
     initGoogleClient(setIsSignedIn);
   }, []);
 
   useEffect(() => {
-    if (isSignedIn) {
-      const sheetName = utils.getEnvVar("SPREADSHEET_NAME");
-      readSheet(sheetName).then((entries) => {
+    if (isSignedIn && isMatchSelected) {
+      // Fetch data for the selected match
+      readSheet(matchName).then((entries) => {
         if (entries.length > 0) {
           const lastEntry = entries[entries.length - 1];
           // Ensure we have a valid position
@@ -64,10 +90,15 @@ export const useTracker = () => {
               setCurrentStepIndex(1); // Skip bowler selection
             }
           }
+        } else {
+             // New match or empty sheet, reset counters
+             setLastOverCount({ over: 0, ball: 0 });
+             setSelections(EMPTY_SELECTIONS);
+             setCurrentStepIndex(0);
         }
       }).catch(console.error);
     }
-  }, [isSignedIn]);
+  }, [isSignedIn, isMatchSelected, matchName]);
 
   // Determine which pages to show based on take result
   const getVisiblePages = (): PageType[] => {
@@ -124,6 +155,12 @@ export const useTracker = () => {
     }
   };
 
+  const setMatchParams = (date: string, number: number) => {
+      setMatchDate(date);
+      setMatchNumber(number);
+      setIsMatchSelected(true);
+  };
+
   const handleSubmit = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -134,8 +171,7 @@ export const useTracker = () => {
     console.log("Logging ball entry", newEntry);
 
     try {
-      const sheetName = utils.getEnvVar("SPREADSHEET_NAME");
-      await logBallToSheet(newEntry, sheetName);
+      await logBallToSheet(newEntry, matchName);
 
       // Determine next state
       const futureOverCount = getNextOverCount(nextOverCount);
@@ -174,7 +210,12 @@ export const useTracker = () => {
       currentStepIndex,
       visiblePages,
       isSummary,
-      currentOverCount: getNextOverCount(lastOverCount)
+      currentOverCount: getNextOverCount(lastOverCount),
+      // Match State
+      isMatchSelected,
+      matchDisplayName,
+      matchDate,
+      matchNumber
     },
     actions: {
       setSelections,
@@ -183,7 +224,9 @@ export const useTracker = () => {
       handleSubmit,
       handleLogout,
       signIn,
-      hideToast: () => setToast((prev) => ({ ...prev, show: false }))
+      hideToast: () => setToast((prev) => ({ ...prev, show: false })),
+      setMatchParams,
+      setIsMatchSelected
     }
   };
 };

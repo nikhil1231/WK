@@ -1,4 +1,4 @@
-import type { BallEntry } from "./types.ts";
+import { type BallEntry, SHEET_HEADERS } from "./types.ts";
 
 export const logBallToSheet = async (
   ball: BallEntry,
@@ -14,16 +14,55 @@ export const logMultipleBallsToSheet = async (
   isLocal: boolean = false
 ): Promise<void> => {
   const values = balls.map(formatBallRow);
-
   const spreadsheetId = getEnvVar("SPREADSHEET_ID");
 
-  await googleSheetsApi.spreadsheets.values.append({
+  const appendRequest = {
     spreadsheetId: spreadsheetId,
     range: `${sheetName}!A2`,
     valueInputOption: "USER_ENTERED",
     ...(!isLocal && { resource: { values } }),
     ...(isLocal && { requestBody: { values } }),
-  });
+  };
+
+  try {
+    await googleSheetsApi.spreadsheets.values.append(appendRequest);
+  } catch (err: any) {
+    // If sheet doesn't exist, Create it and retry
+    // Error encoded string often contains "Unable to parse range"
+    const errorMsg = err.result?.error?.message || err.message || "";
+    if (errorMsg.includes("Unable to parse range") || err.status === 400) {
+       console.log(`Sheet ${sheetName} not found. Creating...`);
+
+       // Create the new sheet
+       await googleSheetsApi.spreadsheets.batchUpdate({
+         spreadsheetId,
+         resource: {
+           requests: [
+             {
+               addSheet: {
+                 properties: {
+                   title: sheetName
+                 }
+               }
+             }
+           ]
+         }
+       });
+
+       // Create Header Row
+       await googleSheetsApi.spreadsheets.values.append({
+         spreadsheetId,
+         range: `${sheetName}!A1`,
+         valueInputOption: "USER_ENTERED",
+         resource: { values: [SHEET_HEADERS] }
+       });
+
+       // Append the data
+       await googleSheetsApi.spreadsheets.values.append(appendRequest);
+    } else {
+      throw err;
+    }
+  }
 };
 
 export const readSheet = async (
@@ -31,19 +70,28 @@ export const readSheet = async (
   sheetName: string
 ): Promise<BallEntry[]> => {
   const spreadsheetId = getEnvVar("SPREADSHEET_ID");
-  const response = await googleSheetsApi.spreadsheets.values.get({
-    spreadsheetId,
-    range: `${sheetName}!A2:H`,
-  });
+  try {
+    const response = await googleSheetsApi.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${sheetName}!A2:H`,
+    });
 
-  // Handle differences between nodejs googleapis (data.values) and browser gapi (result.values)
-  const values = response.result
-    ? response.result.values
-    : response.data.values;
+    // Handle differences between nodejs googleapis (data.values) and browser gapi (result.values)
+    const values = response.result
+        ? response.result.values
+        : response.data.values;
 
-  if (!values) return [];
+    if (!values) return [];
 
-  return values.map(parseBallRow);
+    return values.map(parseBallRow);
+  } catch (err: any) {
+    const errorMsg = err.result?.error?.message || err.message || "";
+    if (errorMsg.includes("Unable to parse range") || err.status === 400) {
+        // Sheet doesn't exist yet, return empty
+        return [];
+    }
+    throw err;
+  }
 };
 
 /**

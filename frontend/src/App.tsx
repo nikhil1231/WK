@@ -4,6 +4,7 @@ import LoadingView from "./components/LoadingView";
 import LoginView from "./components/LoginView";
 import MainPage from "./components/MainPage";
 import SummaryPage from "./components/SummaryPage";
+import MatchSelection from "./components/MatchSelection";
 import { useTracker } from "./hooks/useTracker";
 
 const App = () => {
@@ -15,7 +16,11 @@ const App = () => {
     isSubmitting,
     currentStepIndex,
     visiblePages,
-    isSummary
+    isSummary,
+    isMatchSelected,
+    matchDisplayName,
+    matchDate,
+    matchNumber
   } = state;
   const {
     setSelections,
@@ -24,7 +29,9 @@ const App = () => {
     handleSubmit,
     handleLogout,
     signIn,
-    hideToast
+    hideToast,
+    setMatchParams,
+    setIsMatchSelected
   } = actions;
 
   return (
@@ -33,6 +40,14 @@ const App = () => {
         <LoadingView />
       ) : isSignedIn === false ? (
         <LoginView onLogin={signIn} />
+      ) : !isMatchSelected ? (
+        <div className="flex-grow-1 d-flex">
+           <MatchSelection
+              onConfirm={setMatchParams}
+              initialDate={matchDate}
+              initialMatchNumber={matchNumber}
+           />
+        </div>
       ) : (
         <>
           <Header
@@ -44,6 +59,8 @@ const App = () => {
             onLogout={handleLogout}
             onStepClick={goToStep}
             overCount={state.currentOverCount}
+            matchName={matchDisplayName}
+            onEditMatch={() => setIsMatchSelected(false)}
           />
           <Container fluid className="px-3 flex-grow-1 overflow-y-auto">
              <Row className="justify-content-center h-100">
